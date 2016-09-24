@@ -6,32 +6,76 @@ using namespace std;
 void printBoard(char (&board)[3][3]);
 bool fullBoard(char (&board)[3][3]);
 bool checkWin(char(&board)[3][3], char player);
+void clearBoard(char(&board)[3][3]);
+bool restartGame(char (&board)[3][3], int xwins, int owins, int ties);
+
 int main(){
   cout << "Enter moves in the format <row><column> (for example, \"b3\".)" << endl;
   cout << "Enter \"q\" to quit at any time." << endl;
   char board[3][3];
   char turn = 'X';
   char input[3];
-  bool win = false;
+  bool done = false;
+  int owins = 0;
+  int xwins = 0;
+  int ties = 0;
   
   //Initialize empty board:
-  for(int i=0; i<3; i++){
-    for(int j=0; j<3; j++){
-      board[i][j] = ' ';
-    }
-  }
+  clearBoard(board);
 
-  while(!fullBoard(board) && !win){//Single game here
+  while(true){//Primary loop
     printBoard(board);
+    int i = -1;
+    int j = -1;
     cout << turn << "\'s turn. Enter move:";
-    cin >> input;
-    cout << endl;
-    if(input[0] == 'q'){
+    //Get valid move
+    while(true){
+      cin >> input;
+      cout << endl;
+      if(input[0] == 'q'){
+	cout << endl;
+	cout << "gg";
+	i = 'q';
+	break;
+      }
+      i = tolower(input[0]) - 'a';
+      j = input[1] - '1';
+      if(i>=0 && i<3 && j>=0 && j<3 && board[i][j] == ' '){
+	board[tolower(input[0]) - 'a'][input[1]-'1'] = turn;
+	break;
+      }
+      else{
+	cout << "Enter a valid move, you cheater." << endl;
+      }
+    }
+    if(i == 'q'){
       break;
     }
-    board[tolower(input[0]) - 'a'][input[1]-'1'] = turn;
-    win = checkWin(board, turn);
-    //Switch turns
+    //Check wins
+    if(checkWin(board, turn)){
+      printBoard(board);
+      cout << turn << " wins!" << endl;
+      //Update scores
+      if(turn == 'O'){
+	owins++;
+      }
+      else{
+	xwins++;
+      }
+      
+      if(!restartGame(board, xwins, owins, ties)){
+	break;
+      }
+    }
+    //Check ties
+    if(fullBoard(board)){
+      cout << "Tie!" << endl;
+      ties++;
+      if(!restartGame(board, xwins, owins, ties)){
+	break;
+      }
+    }
+    //switch turns
     if(turn == 'X'){
       turn = 'O';
     }
@@ -39,7 +83,6 @@ int main(){
       turn = 'X';
     }
   }
-  printBoard(board);
 }
 
 
@@ -84,5 +127,31 @@ bool checkWin(char (&board)[3][3], char player){
     return true;
   }
   
+  return false;
+}
+
+void clearBoard(char (&board)[3][3]){
+  for(int i=0; i<3; i++){
+    for(int j=0; j<3; j++){
+      board[i][j] = ' ';
+    }
+  }
+}
+
+bool restartGame(char (&board)[3][3], int xwins, int owins, int ties){
+  //Displays stats.
+  //Returns whether the user wants to play again.
+  //Clears board if necessary.
+  char ans[2];
+  cout << endl;
+  cout << "Stats: " << "X wins: " << xwins << "; O wins: " << owins << "; ties: " << ties << "." << endl;
+  cout << "Play again? (y/n) ";
+  cin >> ans;
+  cout << endl;
+
+  if(tolower(ans[0]) == 'y'){
+    clearBoard(board);
+    return true;
+  }
   return false;
 }
